@@ -32,15 +32,6 @@ jobs:
         ccache -M 5G
         ccache -z
 
-    - name: Restore ccache
-      uses: actions/cache@v4
-      with:
-        key: ccache-${{ runner.os }}-${{ github.ref }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ github.ref }}-
-          ccache-${{ runner.os }}-
-        path: openwrt/.ccache
-
     - name: Download and install smartdns package
       run: |
         cd openwrt
@@ -69,7 +60,6 @@ jobs:
     - name: Install feeds
       run: |
         cd openwrt
-        ./scripts/feed update -a
         ./scripts/feeds install luci luci-app-smartdns
         ./scripts/feeds install -a
 
