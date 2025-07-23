@@ -8,8 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
 
     - name: Install build dependencies
       run: |
@@ -47,8 +45,8 @@ jobs:
       run: |
         cd openwrt
         WORKINGDIR="feeds/packages/net/smartdns"
+        rm -rf $WORKINGDIR
         mkdir -p $WORKINGDIR
-        rm -rf $WORKINGDIR/*
         wget https://github.com/lwb1978/openwrt-smartdns/archive/main.zip -O $WORKINGDIR/main.zip
         unzip $WORKINGDIR/main.zip -d $WORKINGDIR
         mv $WORKINGDIR/openwrt-smartdns-main/* $WORKINGDIR/
@@ -60,8 +58,8 @@ jobs:
         cd openwrt
         BRANCH=${{ github.ref_name }}
         WORKINGDIR="feeds/luci/applications/luci-app-smartdns"
+        rm -rf $WORKINGDIR
         mkdir -p $WORKINGDIR
-        rm -rf $WORKINGDIR/*
         wget https://github.com/xianren78/luci-app-smartdns/archive/${BRANCH}.zip -O $WORKINGDIR/${BRANCH}.zip
         unzip $WORKINGDIR/${BRANCH}.zip -d $WORKINGDIR
         mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/* $WORKINGDIR/ 2>/dev/null || true
@@ -71,8 +69,9 @@ jobs:
     - name: Install feeds
       run: |
         cd openwrt
+        ./scripts/feed update -a
+        ./scripts/feeds install luci luci-app-smartdns
         ./scripts/feeds install -a
-        ./scripts/feeds install -p luci -a
 
     - name: Configure OpenWrt
       run: |
