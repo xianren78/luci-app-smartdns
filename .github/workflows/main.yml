@@ -1,10 +1,7 @@
 name: Build luci-app-smartdns
 
 on:
-  push:
-    branches: [ master, lede ]
-  pull_request:
-    branches: [ master, lede ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -56,7 +53,7 @@ jobs:
         WORKINGDIR="$(pwd)/feeds/luci/applications/luci-app-smartdns"
         mkdir -p $WORKINGDIR
         rm -fr $WORKINGDIR/*
-        wget https://github.com/lwb1978/luci-app-smartdns/archive/${BRANCH}.zip -O $WORKINGDIR/${BRANCH}.zip
+        wget https://github.com/xianren78/luci-app-smartdns/archive/${BRANCH}.zip -O $WORKINGDIR/${BRANCH}.zip
         unzip $WORKINGDIR/${BRANCH}.zip -d $WORKINGDIR
         mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/* $WORKINGDIR/
         rmdir $WORKINGDIR/luci-app-smartdns-${BRANCH}
