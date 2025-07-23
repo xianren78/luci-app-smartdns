@@ -31,32 +31,40 @@ jobs:
         cd openwrt
         mkdir -p .ccache
         export CCACHE_DIR="$(pwd)/.ccache"
-        ccache -M 5G  # Set max cache size to 5GB
-        ccache -z     # Clear stats to ensure fresh cache usage
+        ccache -M 5G
+        ccache -z
+
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        key: ccache-${{ runner.os }}-${{ github.ref }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ runner.os }}-${{ github.ref }}-
+          ccache-${{ runner.os }}-
+        path: openwrt/.ccache
 
     - name: Download and install smartdns package
       run: |
         cd openwrt
-        WORKINGDIR="$(pwd)/feeds/packages/net/smartdns"
+        WORKINGDIR="feeds/packages/net/smartdns"
         mkdir -p $WORKINGDIR
-        rm -fr $WORKINGDIR/*
+        rm -rf $WORKINGDIR/*
         wget https://github.com/lwb1978/openwrt-smartdns/archive/main.zip -O $WORKINGDIR/main.zip
         unzip $WORKINGDIR/main.zip -d $WORKINGDIR
         mv $WORKINGDIR/openwrt-smartdns-main/* $WORKINGDIR/
         rm -rf $WORKINGDIR/openwrt-smartdns-main
         rm $WORKINGDIR/main.zip
 
-    - name: Download and install luci-app-smartdns
+    - name: Download and install luci-app-smartdns (ZIP version)
       run: |
         cd openwrt
-        BRANCH=${{ github.ref_name }}  # Use the branch name (master or lede)
-        WORKINGDIR="$(pwd)/feeds/luci/applications/luci-app-smartdns"
+        BRANCH=${{ github.ref_name }}
+        WORKINGDIR="feeds/luci/applications/luci-app-smartdns"
         mkdir -p $WORKINGDIR
-        rm -fr $WORKINGDIR/*
+        rm -rf $WORKINGDIR/*
         wget https://github.com/xianren78/luci-app-smartdns/archive/${BRANCH}.zip -O $WORKINGDIR/${BRANCH}.zip
         unzip $WORKINGDIR/${BRANCH}.zip -d $WORKINGDIR
-        mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/* $WORKINGDIR/
-        mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/.* $WORKINGDIR/
+        mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/* $WORKINGDIR/ 2>/dev/null || true
         rm -rf $WORKINGDIR/luci-app-smartdns-${BRANCH}
         rm $WORKINGDIR/${BRANCH}.zip
 
@@ -64,6 +72,7 @@ jobs:
       run: |
         cd openwrt
         ./scripts/feeds install -a
+        ./scripts/feeds install -p luci -a
 
     - name: Configure OpenWrt
       run: |
@@ -73,23 +82,42 @@ jobs:
         make defconfig
         echo "CONFIG_CCACHE=y" >> .config
         echo 'CONFIG_SIGNED_PACKAGES=""' >> .config
-        # Enable smartdns and luci-app-smartdns
         echo "CONFIG_PACKAGE_smartdns=m" >> .config
         echo "CONFIG_PACKAGE_luci-app-smartdns=m" >> .config
-        # Enable additional dependencies and Chinese translations
         echo "CONFIG_PACKAGE_luci-base=m" >> .config
         echo "CONFIG_PACKAGE_rpcd-mod-luci=m" >> .config
         echo "CONFIG_PACKAGE_luci-i18n-base-zh-cn=m" >> .config
         echo "CONFIG_PACKAGE_luci-i18n-smartdns-zh-cn=m" >> .config
-        # Enable lua for lede branch
         if [ "${{ github.ref_name }}" = "lede" ]; then
           echo "CONFIG_PACKAGE_lua=m" >> .config
         fi
-        # Enable luci for master branch
         if [ "${{ github.ref_name }}" = "master" ]; then
           echo "CONFIG_PACKAGE_luci=m" >> .config
         fi
         make defconfig
+
+    - name: Cache staging_dir for tools and toolchain
+      uses: actions/cache@v4
+      with:
+        key: staging-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('.config', 'feeds.conf.default') }}
+        restore-keys: |
+          staging-${{ runner.os }}-${{ github.ref }}-
+          staging-${{ runner.os }}-
+        path: |
+          openwrt/staging_dir/host
+          openwrt/staging_dir/toolchain-*
+
+    - name: Cache downloads
+      uses: actions/cache@v4
+      with:
+        key: dl-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('feeds.conf.default') }}
+        path: openwrt/dl
+
+    - name: Debug PO files (optional)
+      run: |
+        cd openwrt
+        echo "语言包目录结构如下（用于调试）:"
+        find feeds/luci/applications/luci-app-smartdns -type d -name "po"
 
     - name: Build tools and toolchain
       run: |
@@ -99,14 +127,14 @@ jobs:
         make tools/install V=s -j$(nproc)
         make toolchain/install V=s -j$(nproc)
 
-    - name: Compile and install smartdns package
+    - name: Compile smartdns package
       run: |
         cd openwrt
         export CCACHE_DIR="$(pwd)/.ccache"
         export CCACHE_BASEDIR="$(pwd)"
         make package/smartdns/compile V=s -j$(nproc)
 
-    - name: Compile and install luci-app-smartdns package
+    - name: Compile luci-app-smartdns package
       run: |
         cd openwrt
         export CCACHE_DIR="$(pwd)/.ccache"
@@ -124,16 +152,7 @@ jobs:
       run: |
         cd openwrt
         export CCACHE_DIR="$(pwd)/.ccache"
-        ccache -s  # Display ccache statistics to verify cache usage
-
-    - name: Cache ccache
-      uses: actions/cache@v4
-      with:
-        key: ccache-${{ runner.os }}-${{ github.ref }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ github.ref }}-
-          ccache-${{ runner.os }}-
-        path: openwrt/.ccache
+        ccache -s
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
