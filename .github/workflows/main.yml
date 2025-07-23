@@ -141,13 +141,6 @@ jobs:
         export CCACHE_BASEDIR="$(pwd)"
         make package/luci-app-smartdns/compile V=s -j$(nproc)
 
-    - name: Install luci-i18n-smartdns-zh-cn package
-      run: |
-        cd openwrt
-        export CCACHE_DIR="$(pwd)/.ccache"
-        export CCACHE_BASEDIR="$(pwd)"
-        make package/luci-i18n-smartdns-zh-cn/install V=s -j$(nproc)
-
     - name: Show ccache statistics
       run: |
         cd openwrt
