@@ -43,7 +43,7 @@ jobs:
         wget https://github.com/lwb1978/openwrt-smartdns/archive/main.zip -O $WORKINGDIR/main.zip
         unzip $WORKINGDIR/main.zip -d $WORKINGDIR
         mv $WORKINGDIR/openwrt-smartdns-main/* $WORKINGDIR/
-        rmdir $WORKINGDIR/openwrt-smartdns-main
+        rm -rf $WORKINGDIR/openwrt-smartdns-main
         rm $WORKINGDIR/main.zip
 
     - name: Download and install luci-app-smartdns
@@ -56,7 +56,8 @@ jobs:
         wget https://github.com/xianren78/luci-app-smartdns/archive/${BRANCH}.zip -O $WORKINGDIR/${BRANCH}.zip
         unzip $WORKINGDIR/${BRANCH}.zip -d $WORKINGDIR
         mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/* $WORKINGDIR/
-        rmdir $WORKINGDIR/luci-app-smartdns-${BRANCH}
+        mv $WORKINGDIR/luci-app-smartdns-${BRANCH}/.* $WORKINGDIR/
+        rm -rf $WORKINGDIR/luci-app-smartdns-${BRANCH}
         rm $WORKINGDIR/${BRANCH}.zip
 
     - name: Install feeds
