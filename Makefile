@@ -27,7 +27,7 @@ help
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_smartdns_ui
 	bool "Include smartdns-ui"
-	default n
+	default y
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
