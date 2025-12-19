@@ -71,7 +71,7 @@ function smartdnsRenderStatus(res) {
 			var protocol = window.location.protocol;
 			var hostname = window.location.hostname;
 			var uiLink = protocol + "//" + hostname + ":" + uiPort;
-			renderHTML +=  '&#160; <a style="margin-left:10px; padding:6px 12px; ' +  'background:#000 !important; color:#fff !important; ' +  'border:1px solid #333; border-radius:4px; text-decoration:none;" ' +  'href="' + uiLink + '" target="_blank">' +  _("Open the WebUI") +  '</a>';
+			renderHTML +=  '&#160; <a class="cbi-button cbi-button-positive" ' +  'href="' + uiLink + '" target="_blank">' +  _("Open the WebUI") +  '</a>';
 		}
 	} else {
 		renderHTML += "<span style=\"color:red;font-weight:bold\">SmartDNS - " + _("NOT RUNNING") + "</span>";
